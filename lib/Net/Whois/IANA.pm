@@ -267,7 +267,7 @@ sub ripe_read_query ($$) {
 		s/\s+$//;
 		my ($field,$value) = split(/:/);
 		$value =~ s/^\s+//;
-		$query{$field} .= $value;
+    $query{lc($field)} .= ( $query{lc($field)} ?  ' ' : '') . $value;
 		last if (/^route/);
     }
     close $sock;
@@ -334,7 +334,7 @@ sub apnic_read_query ($$) {
 			%query = ();
 			$query{fullinfo} = $tmp{fullinfo};
 		}
-		$query{$field} .= $value;
+    $query{lc($field)} .= ( $query{lc($field)} ?  ' ' : '') . $value;
     }
     close $sock;
     for (keys %tmp) {
@@ -399,7 +399,7 @@ sub arin_read_query ($$) {
 			%query = ();
 			$query{fullinfo} = $tmp{fullinfo};
 		}
-		$query{lc($field)} .= $value;
+    $query{lc($field)} .= ( $query{lc($field)} ?  ' ' : '') . $value;
     }
     close $sock;
     $query{orgname} = $query{custname} if defined $query{custname};
@@ -523,7 +523,7 @@ sub afrinic_read_query ($$) {
         s/\s+$//;
         my ($field,$value) = split(/:/);
         $value =~ s/^\s+//;
-        $query{$field} .= $value;
+		    $query{lc($field)} .= ( $query{lc($field)} ?  ' ' : '') . $value;
     }
     close $sock;
 	return %query;
