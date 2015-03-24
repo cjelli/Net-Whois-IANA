@@ -268,7 +268,6 @@ sub ripe_read_query ($$) {
 		my ($field,$value) = split(/:/);
 		$value =~ s/^\s+//;
     $query{lc($field)} .= ( $query{lc($field)} ?  ' ' : '') . $value;
-		last if (/^route/);
     }
     close $sock;
 	return %query;
