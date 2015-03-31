@@ -16,6 +16,7 @@ use base 'Exporter';
 
 our $WHOIS_PORT    = 43;
 our $WHOIS_TIMEOUT = 30;
+our @DEFAULT_SOURCE_ORDER = qw(arin ripe apnic lacnic afrinic);
 
 our %IANA = (
 	apnic   => [
@@ -108,13 +109,56 @@ sub whois_connect ($;$$) {
     return $sock || 0;
 }
 
-sub is_valid_ip ($) {
+sub is_valid_ipv4 ($) {
 
 	my $ip = shift;
 
 	return $ip
 		&& $ip =~ /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/
 		&& (($1+0)|($2+0)|($3+0)|($4+0)) < 0x100;
+}
+
+sub is_valid_ipv6 {
+    my ($ip) = @_;
+    return if $ip =~ /^:[^:]/ || $ip =~ /[^:]:$/;    # Can't have single : on front or back
+
+    my @seg = split /:/, $ip, -1;                    # -1 to keep trailing empty fields
+                                                     # Clean up leading/trailing double colon effects.
+    shift @seg if $seg[0] eq '';
+    pop @seg   if $seg[-1] eq '';
+
+    my $max = 8;
+    if ( $seg[-1] =~ tr/.// ) {
+        return unless is_valid_ipv4( pop @seg );
+        $max -= 2;
+    }
+
+    my $cmp;
+    for my $seg (@seg) {
+        if ( $seg eq '' ) {
+
+            # Only one compression segment allowed.
+            return if $cmp;
+            ++$cmp;
+            next;
+        }
+        return if $seg =~ /[^0-9a-fA-F]/;
+        return if length $seg == 0 || length $seg > 4;
+    }
+    if ($cmp) {
+
+        # If compressed, we need fewer than $max segments, but at least 1
+        return ( @seg && @seg < $max ) && 1;    # true returned as 1
+    }
+
+    # Not compressed, all segments need to be there.
+    return $max == @seg;
+}
+
+# Is valid IP v4 or IP v6 address.
+sub is_valid_ip ($) {
+    my($ip) = @_;
+    return $ip =~ tr/:// ? is_valid_ipv6($ip) : is_valid_ipv4($ip);
 }
 
 sub set_source ($$) {
@@ -228,9 +272,8 @@ sub whois_query ($%) {
 
 	my $self = shift;
 	my %params = @_;
-
 	$self->init_query(%params);
-	my @source_names = keys %{$self->{source}};
+	my @source_names = @DEFAULT_SOURCE_ORDER;
     $self->{QUERY} = {};
     for my $source_name (@source_names) {
 		print STDERR "Querying $source_name ...\n" if $params{-debug};
@@ -265,7 +308,7 @@ sub ripe_read_query ($$) {
 		close $sock and return (permission => 'denied') if /ERROR:201/;
 		next if (/^(\%|\#)/ || !/\:/);
 		s/\s+$//;
-		my ($field,$value) = split(/:/);
+		my ($field,$value) = split(/:/, $_, 2);
 		$value =~ s/^\s+//;
     $query{lc($field)} .= ( $query{lc($field)} ?  ' ' : '') . $value;
     }
@@ -298,7 +341,7 @@ sub ripe_process_query (%) {
     }
     else {
 		$query{permission} = 'allowed';
-        $query{cidr} = [ Net::CIDR::range2cidr($query{inetnum}) ];
+        $query{cidr} = [Net::CIDR::range2cidr(uc($query{inet6num} || $query{inetnum}))];
     }
     return %query;
 }
@@ -326,9 +369,9 @@ sub apnic_read_query ($$) {
 		close $sock and	return (permission => 'denied') if /^\%201/;
 		next if (/^\%/ || !/\:/);
 		s/\s+$//;
-		my ($field,$value) = split(/:/);
+		my ($field,$value) = split(/:/, $_, 2);
 		$value =~ s/^\s+//;
-		if ($field eq 'inetnum') {
+		if ($field =~ /^inet6?num$/) {
 			%tmp = %query;
 			%query = ();
 			$query{fullinfo} = $tmp{fullinfo};
@@ -348,7 +391,7 @@ sub apnic_process_query (%) {
     if (
 		(
 			defined $query{remarks} &&
-			$query{remarks} =~ /address range is not administered by APNIC/
+			$query{remarks} =~ /address range is not administered by APNIC|This network in not allocated/
 		) || (
 			defined $query{descr} &&
 			$query{descr} =~ /not allocated to|by APNIC|placeholder reference/i
@@ -361,7 +404,7 @@ sub apnic_process_query (%) {
     }
     else {
     	$query{permission} = 'allowed';
-		$query{cidr} = [Net::CIDR::range2cidr($query{inetnum})];
+        $query{cidr} = [Net::CIDR::range2cidr(uc($query{inet6num} || $query{inetnum}))];
     }
     return %query;
 }
@@ -390,7 +433,7 @@ sub arin_read_query ($$) {
 		return () if /no match found for/i;
 		next if (/^\#/ || !/\:/);
 		s/\s+$//;
-		my ($field,$value) = split(/:/);
+		my ($field,$value) = split(/:/, $_, 2);
 		$value =~ s/^\s+//;
 		if ($field eq 'OrgName' ||
 				$field eq 'CustName') {
@@ -409,16 +452,8 @@ sub arin_read_query ($$) {
 }
 
 sub arin_process_query (%) {
-
 	my %query = @_;
-
-    return () unless
-		$query{country} or
-		$query{nettype} !~ /allocated to/i or
-			$query{comment} &&
-			$query{comment} =~ /This IP address range is not registered in the ARIN/ or
-			$query{orgid} &&
-			$query{orgid} =~ /RIPE|LACNIC|APNIC|AFRINIC/;
+    return () if $query{orgid} && $query{orgid} =~ /^\s*RIPE|LACNIC|APNIC|AFRINIC\s*$/;
 
 	$query{permission} = 'allowed';
 	$query{descr}   = $query{orgname};
@@ -465,7 +500,7 @@ sub lacnic_read_query ($$) {
 		}
 		next if (/^\%/ || !/\:/);
 		s/\s+$//;
-		my ($field,$value) = split(/:/);
+		my ($field,$value) = split(/:/, $_, 2);
 		$value =~ s/^\s+//;
 		next if $field eq 'country' && $query{country};
 		$query{lc($field)} .= ( $query{lc($field)} ?  ' ' : '') . $value;
@@ -520,7 +555,7 @@ sub afrinic_read_query ($$) {
         close $sock and return (permission => 'denied') if /^\%201/;
         next if (/^\%/ || !/\:/);
         s/\s+$//;
-        my ($field,$value) = split(/:/);
+        my ($field,$value) = split(/:/, $_, 2);
         $value =~ s/^\s+//;
 		    $query{lc($field)} .= ( $query{lc($field)} ?  ' ' : '') . $value;
     }
@@ -544,7 +579,7 @@ sub afrinic_process_query (%) {
     }
 
 	$query{permission} = 'allowed';
-	$query{cidr} = [ Net::CIDR::range2cidr($query{inetnum}) ];
+    $query{cidr} = [Net::CIDR::range2cidr(uc($query{inet6num} || $query{inetnum}))];
     return %query;
 }
 
@@ -603,7 +638,7 @@ Net::Whois::IANA - A universal WHOIS data extractor.
   This is a simple module to extract the descriptive whois
 information about various IPs as they are stored in the four
 regional whois registries of IANA - RIPE (Europe, Middle East)
-APNIC (Asia/Pacific), ARIN (North America), AFRINIC (Africa) 
+APNIC (Asia/Pacific), ARIN (North America), AFRINIC (Africa)
 and LACNIC (Latin American & Caribbean).
 
   It is designed to serve statistical harvesters of various
