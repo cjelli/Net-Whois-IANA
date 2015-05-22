@@ -38,7 +38,6 @@ our %IANA = (
 
 use base 'Exporter';
 
-our $AUTOLOAD;
 our @IANA = keys %IANA;
 
 our @EXPORT = qw(
@@ -56,57 +55,30 @@ sub new ($) {
     return $self;
 }
 
-sub AUTOLOAD ($;@) {
-
-	my $self = shift;
-	my @params = @_;
-
-	my $method = $AUTOLOAD;
-	$method = lc $method;
-	my @path = split(/\:\:/, $method);
-	$method = pop @path;
-	return if $method =~ 'destroy';
-	carp "No such method or property $method\n"
-		unless exists $self->{QUERY} && exists $self->{QUERY}{$method};
-	return $self->{QUERY}{$method};
-}
-
 sub whois_connect ($;$$) {
+    my ($host_ref) = @_;
 
-    my $host    = shift;
-	my $port;
-	my $timeout;
+    my $port    = $host_ref->[1] || $WHOIS_PORT;
+    my $timeout = $host_ref->[2] || $WHOIS_TIMEOUT;
+    my $host    = $host_ref->[0];
+    my $retries = 2;
+    my $sleep   = 2;
 
-	if (ref $host && ref $host eq 'ARRAY') {
-		$port    = $host->[1] || $WHOIS_PORT;
-		$timeout = $host->[2] || $WHOIS_TIMEOUT;
-		$host    = $host->[0];
-	}
-	else {
-		$port    = shift || $WHOIS_PORT;
-		$timeout = shift || $WHOIS_TIMEOUT;
-	}
-
-	my $retries = 2;
-	my $sleep   = 1;
-	my $r = 0;
-	my $sock;
-
-	do {
-		if ($r) {
-			carp "Cannot connect to $host at port $port";
-			carp $@;
-			sleep $sleep;
-		}
-		$sock = IO::Socket::INET->new(
-			PeerAddr => $host,
-			PeerPort => $port,
-			Timeout  => $timeout,
-		);
-		$r++;
-	} until ($sock || $r == $retries);
-
-    return $sock || 0;
+    for ( 0 .. $retries ) {
+        if (
+            my $sock = IO::Socket::INET->new(
+                PeerAddr => $host,
+                PeerPort => $port,
+                Timeout  => $timeout,
+            )
+          ) {
+            return $sock;
+        }
+        carp "Cannot connect to $host at port $port";
+        carp $@;
+        sleep $sleep;
+    }
+    return 0;
 }
 
 sub is_valid_ipv4 ($) {
@@ -223,21 +195,17 @@ Custom sources must be of form:
 }
 
 sub source_connect ($$) {
+    my ( $self, $source_name ) = @_;
 
-	my $self = shift;
-	my $source_name = shift;
-	my $i = 0;
-	my $sock;
-	do {
-		$sock = whois_connect($self->{source}{$source_name}[$i]);
-		$self->{query_sub} =
-			ref $self->{source}{$source_name}[$i][3] &&
-			ref $self->{source}{$source_name}[$i][3] eq 'CODE' ?
-				$self->{source}{$source_name}[$i][3] : \&default_query;
-		$self->{whois_host} = $self->{source}{$source_name}[$i][0];
-		$i++;
-	} until ($sock || !defined $self->{source}{$source_name}[$i]);
-	return $sock;
+    foreach my $server_ref ( @{ $self->{source}{$source_name} } ) {
+        if ( my $sock = whois_connect($server_ref) ) {
+            my ( $whois_host, $whois_port, $whois_timeout, $query_code ) = @{$server_ref};
+            $self->{query_sub} = $query_code && ref $query_code eq 'CODE' ? $query_code : \&default_query;
+            $self->{whois_host} = $whois_host;
+            return $sock;
+        }
+    }
+    return undef;
 }
 
 sub post_process_query (%) {
