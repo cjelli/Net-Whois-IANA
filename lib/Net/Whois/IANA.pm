@@ -5,10 +5,9 @@ use 5.006;
 use strict;
 use warnings;
 
-use Carp;
-use IO::Socket;
-
-use Net::CIDR;
+use Carp       ();
+use IO::Socket ();
+use Net::CIDR  ();
 
 use base 'Exporter';
 
@@ -74,8 +73,8 @@ sub whois_connect ($;$$) {
           ) {
             return $sock;
         }
-        carp "Cannot connect to $host at port $port";
-        carp $@;
+        Carp::carp "Cannot connect to $host at port $port";
+        Carp::carp $@;
         sleep $sleep;
     }
     return 0;
@@ -246,10 +245,10 @@ sub whois_query ($%) {
     for my $source_name (@source_names) {
 		print STDERR "Querying $source_name ...\n" if $params{-debug};
 		my $sock = $self->source_connect($source_name) ||
-			carp "Connection failed to $source_name." && next;
+			Carp::carp "Connection failed to $source_name." && next;
 		my %query = $self->{query_sub}($sock, $params{-ip});
 		next if (! keys %query);
-		carp "Warning: permission denied at $source_name server $self->{whois_host}\n" and next
+		Carp::carp "Warning: permission denied at $source_name server $self->{whois_host}\n" and next
 			if $query{permission} eq 'denied';
 		$query{server} = uc $source_name;
 		$self->{QUERY} = {post_process_query(%query)};
