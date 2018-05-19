@@ -326,31 +326,47 @@ sub ripe_query ($$) {
 sub apnic_read_query ($$) {
 
     my $sock = shift;
-    my $ip = shift;
+    my $ip   = shift;
 
-    my %query = (fullinfo => '');
-	my %tmp;
+    my %query = ( fullinfo => '' );
+    my %tmp;
     print $sock "-r $ip\n";
+    my $skip_block = 0;
     while (<$sock>) {
-		$query{fullinfo} .= $_;
-		close $sock and	return (permission => 'denied') if /^\%201/;
-		next if (/^\%/ || !/\:/);
-		s/\s+$//;
-		my ($field,$value) = split(/:/, $_, 2);
-		$value =~ s/^\s+//;
-		if ($field =~ /^inet6?num$/) {
-			%tmp = %query;
-			%query = ();
-			$query{fullinfo} = $tmp{fullinfo};
-		}
-    $query{lc($field)} .= ( $query{lc($field)} ?  ' ' : '') . $value;
+        $query{fullinfo} .= $_;
+        close $sock and return ( permission => 'denied' ) if /^\%201/;
+        if (m{^\%}) {
+
+            # Always skip 0.0.0.0 data
+            # It looks like:
+            # % Information related to '0.0.0.0 - 255.255.255.255'
+            if (m{^\%.*0\.0\.0\.0\s+}) {
+                $skip_block = 1;
+                next;
+            }
+            $skip_block = 0;
+            next;
+        }
+        next if $skip_block;
+        next if ( !/\:/ );
+        s/\s+$//;
+        my ( $field, $value ) = split( /:/, $_, 2 );
+        $value =~ s/^\s+//;
+        if ( $field =~ /^inet6?num$/ ) {
+            next if $value =~ m{0\.0\.0\.0\s+};
+            %tmp             = %query;
+            %query           = ();
+            $query{fullinfo} = $tmp{fullinfo};
+        }
+        $query{ lc($field) } .= ( $query{ lc($field) } ? ' ' : '' ) . $value;
     }
     close $sock;
-    for (keys %tmp) {
-		$query{$_} = $tmp{$_} if ! defined $query{$_};
+    for ( keys %tmp ) {
+        $query{$_} = $tmp{$_} if !defined $query{$_};
     }
-	return %query;
+    return %query;
 }
+
 
 sub apnic_process_query (%) {
 
@@ -510,25 +526,7 @@ sub lacnic_query ($$) {
 	return lacnic_process_query(%query);
 }
 
-sub afrinic_read_query ($$) {
-
-    my $sock = shift;
-    my $ip = shift;
-
-    my %query = (fullinfo => '');
-    print $sock "-r $ip\n";
-    while (<$sock>) {
-        $query{fullinfo} .= $_;
-        close $sock and return (permission => 'denied') if /^\%201/;
-        next if (/^\%/ || !/\:/);
-        s/\s+$//;
-        my ($field,$value) = split(/:/, $_, 2);
-        $value =~ s/^\s+//;
-		    $query{lc($field)} .= ( $query{lc($field)} ?  ' ' : '') . $value;
-    }
-    close $sock;
-	return %query;
-}
+*afrinic_read_query = *apnic_read_query;
 
 sub afrinic_process_query (%) {
 
