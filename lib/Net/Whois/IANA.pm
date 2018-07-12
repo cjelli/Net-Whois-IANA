@@ -294,6 +294,9 @@ sub ripe_process_query (%) {
 	) {
 		return ();
     }
+    elsif ( !$query{inet6num} && !$query{inetnum} ) {
+        return ();
+    }
     else {
 		$query{permission} = 'allowed';
         $query{cidr} = [ Net::CIDR::range2cidr($query{inetnum}) ];
@@ -353,6 +356,9 @@ sub apnic_process_query (%) {
 		)
 	) {
 		return ();
+    }
+    elsif ( !$query{inet6num} && !$query{inetnum} ) {
+        return ();
     }
     else {
     	$query{permission} = 'allowed';
@@ -533,6 +539,11 @@ sub afrinic_process_query (%) {
 			or
 		defined $query{descr} &&
 		$query{descr} =~ /Here for in-addr\.arpa authentication/;
+
+    if ( !$query{inet6num} && !$query{inetnum} ) {
+        return ();
+    }
+
 	$query{permission} = 'allowed';
 	$query{cidr} = [ Net::CIDR::range2cidr($query{inetnum}) ];
     return %query;
