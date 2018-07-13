@@ -18,6 +18,7 @@ our $WHOIS_TIMEOUT        = 30;
 our @DEFAULT_SOURCE_ORDER = qw(arin ripe apnic lacnic afrinic);
 
 our %IANA;
+our @IANA;
 
 BEGIN {
     # populate the hash at compile time
@@ -39,11 +40,8 @@ BEGIN {
         ],
     );
 
+    @IANA = sort keys %IANA;
 }
-
-use base 'Exporter';
-
-our @IANA = keys %IANA;
 
 our @EXPORT = qw(
   @IANA
