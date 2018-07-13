@@ -5,11 +5,11 @@ use Test::More tests => 4;
 use Net::Whois::IANA;
 
 my $iana = Net::Whois::IANA->new;
-my $ip = '196.216.2.1';
-$iana->whois_query(-ip=>$ip,-whois=>'afrinic');
-ok(defined $iana);
-ok($iana->country() eq 'ZA');
+my $ip   = '196.216.2.1';
+$iana->whois_query( -ip => $ip, -whois => 'afrinic' );
+ok( defined $iana );
+ok( $iana->country() eq 'ZA' );
 $ip = '84.36.233.152';
-$iana->whois_query(-ip=>$ip,-whois=>'afrinic');
-ok(defined $iana);
-ok($iana->country() eq 'EG');
+$iana->whois_query( -ip => $ip, -whois => 'afrinic' );
+ok( defined $iana );
+ok( $iana->country() eq 'EG' );
