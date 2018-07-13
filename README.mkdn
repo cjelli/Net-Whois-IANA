@@ -136,7 +136,7 @@ Net::Whois::IANA - A universal WHOIS data extractor.
     This is a simple module to extract the descriptive whois
   information about various IPs as they are stored in the four
   regional whois registries of IANA - RIPE (Europe, Middle East)
-  APNIC (Asia/Pacific), ARIN (North America), AFRINIC (Africa) 
+  APNIC (Asia/Pacific), ARIN (North America), AFRINIC (Africa)
   and LACNIC (Latin American & Caribbean).
 
     It is designed to serve statistical harvesters of various
