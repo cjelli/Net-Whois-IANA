@@ -1,6 +1,7 @@
 {{$NEXT}}
 
     - Adjust duplicate copyrights
+    - Adjust flapping test for BR country
 
 0.43      2018-07-13 14:26:35-06:00 America/Denver
     - Skip results that are missing inetnum and inet6num
