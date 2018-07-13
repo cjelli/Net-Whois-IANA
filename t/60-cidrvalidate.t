@@ -13,13 +13,16 @@ use Net::Whois::IANA;
 my $iana = Net::Whois::IANA->new;
 $iana->whois_query( -ip => '191.96.58.222', -debug => 0 );
 
+my $cidr = $iana->cidr;
+is ref $cidr, 'ARRAY', "cidr is an array ref";
+
 note explain $iana->cidr;
-is $iana->cidr->[0], '191.96.58/24', 'cidr';
+is $cidr->[0], '191.96.58/24', 'cidr';
 
 # view on travis smoker this can be either 191.96.58/24 or 191.96.58-191.96.58...
 ### need to investigate
 
 #is $iana->inetnum, '191.96.58-191.96.58', 'range';
-ok Net::CIDR::cidrvalidate( $iana->cidr->[0] );
+ok Net::CIDR::cidrvalidate( $cidr->[0] );
 
 done_testing;

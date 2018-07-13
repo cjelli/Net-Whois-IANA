@@ -41,14 +41,8 @@ BEGIN {
     );
 
     @IANA = sort keys %IANA;
-}
 
-our @EXPORT = qw(
-  @IANA
-  %IANA
-);
-
-BEGIN {
+    # accessors
     # do not use AUTOLOAD - only accept lowercase function name
     # define accessors at compile time
     my @accessors = qw{country netname desc status source server inetnum inet6num cidr};
@@ -64,6 +58,8 @@ BEGIN {
     }
 }
 
+our @EXPORT = qw( @IANA %IANA );
+
 sub new ($) {
 
     my $proto = shift;
@@ -71,6 +67,7 @@ sub new ($) {
     my $self  = {};
 
     bless $self, $class;
+
     return $self;
 }
 
@@ -266,13 +263,12 @@ sub post_process_query (%) {
 }
 
 sub whois_query ($%) {
+    my ( $self, %params ) = @_;
 
-    my $self   = shift;
-    my %params = @_;
     $self->init_query(%params);
-    my @source_names = @DEFAULT_SOURCE_ORDER;
     $self->{QUERY} = {};
-    for my $source_name (@source_names) {
+
+    for my $source_name (@DEFAULT_SOURCE_ORDER) {
         print STDERR "Querying $source_name ...\n" if $params{-debug};
         my $sock = $self->source_connect($source_name)
           || Carp::carp "Connection failed to $source_name." && next;
