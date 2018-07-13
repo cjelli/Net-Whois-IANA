@@ -578,28 +578,31 @@ sub afrinic_process_query (%) {
 }
 
 sub afrinic_query ($$) {
+	my ( $sock, $ip ) = @_;
 
-    my $sock = shift;
-    my $ip = shift;
     my %query = afrinic_read_query($sock, $ip);
+
 	return afrinic_process_query(%query);
 }
 
 sub is_mine ($$;@) {
-
-	my $self = shift;
-	my $ip   = shift;
-	my @cidr = @_;
+	my ( $self, $ip, @cidr ) = @_;
 
     return 0 unless is_valid_ip($ip);
-    @cidr = @{$self->cidr()} unless @cidr;
-	@cidr = map(split(/\s+/), @cidr);
+    if ( ! scalar @cidr ) {
+        my $out = $self->cidr();
+        @cidr = @$out if ref $out;
+    }
+
 	@cidr = map {
 		my @dots = (split/\./);
 		my $pad = '.0' x (4 - @dots);
 		s|(/.*)|$pad$1|;
 		$_;
-	} @cidr;
+	}
+	map { split(/\s+/) }
+	 @cidr;
+
 	return Net::CIDR::cidrlookup($ip, @cidr);
 }
 
