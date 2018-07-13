@@ -4,7 +4,7 @@ use warnings;
 use Test::More tests => 9;
 use Net::Whois::IANA;
 
-my $iana = new Net::Whois::IANA;
+my $iana = Net::Whois::IANA->new;
 my $ip = '193.0.0.135';
 $iana->whois_query(-ip => $ip);
 ok($iana->is_mine('193.0.1.1'));
