@@ -12,6 +12,8 @@ use Net::CIDR;
 
 use base 'Exporter';
 
+# ABSTRACT: Net::Whois::IANA - A universal WHOIS data extractor.
+
 our $WHOIS_PORT    = 43;
 our $WHOIS_TIMEOUT = 30;
 
@@ -42,8 +44,6 @@ our @EXPORT = qw(
 	@IANA
 	%IANA
 );
-
-our $VERSION = '0.41';
 
 sub new ($) {
 

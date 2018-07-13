@@ -1,4 +1,5 @@
-Revision history for Perl extension Net::Whois::IANA.
+{{$NEXT}}
+- Skip results that are missing inetnum and inet6num
 
 0.41  Fri Mar 29 12:11:19 PDT 2013
 	- Fixed bug causing infinite loops when connecting to servers
