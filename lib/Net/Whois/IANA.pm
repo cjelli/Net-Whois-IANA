@@ -55,11 +55,15 @@ sub new ($) {
 }
 
 sub whois_connect ($;$$) {
-    my ($host_ref) = @_;
+    my ($host, $port, $timeout) = @_;
 
-    my $port    = $host_ref->[1] || $WHOIS_PORT;
-    my $timeout = $host_ref->[2] || $WHOIS_TIMEOUT;
-    my $host    = $host_ref->[0];
+    ( $host, $port, $timeout ) = @$host if ref $host;
+
+    $port    ||= $WHOIS_PORT;
+    $timeout ||= $WHOIS_TIMEOUT;
+    #my $port    = $host_ref->[1] || $WHOIS_PORT;
+    #my $timeout = $host_ref->[2] || $WHOIS_TIMEOUT;
+    #my $host    = $host_ref->[0];
     my $retries = 2;
     my $sleep   = 2;
 
@@ -129,7 +133,7 @@ sub is_valid_ipv6 {
 # Is valid IP v4 or IP v6 address.
 sub is_valid_ip ($) {
     my($ip) = @_;
-    return $ip =~ tr/:// ? is_valid_ipv6($ip) : is_valid_ipv4($ip);
+    return defined $ip && $ip =~ tr/:// ? is_valid_ipv6($ip) : is_valid_ipv4($ip);
 }
 
 sub set_source ($$) {
@@ -586,7 +590,7 @@ Net::Whois::IANA - A universal WHOIS data extractor.
 
   use Net::Whois::IANA;
   my $ip = '132.66.16.2';
-  my $iana = new Net::Whois::IANA;
+  my $iana = Net::Whois::IANA->new;
   $iana->whois_query(-ip=>$ip);
   print "Country: " , $iana->country()            , "\n";
   print "Netname: " , $iana->netname()            , "\n";
