@@ -9,23 +9,23 @@ use Net::Whois::IANA;
 
 my $iana = Net::Whois::IANA->new;
 
-my $ip = '200.16.98.2';
-$iana->whois_query( -ip => $ip, -whois => 'lacnic' );
-ok( defined $iana );
-is( $iana->country(), 'AR' ) or diag explain $iana;
+my %tests = (
+    '200.16.98.2'     => 'AR',
+    '200.77.236.16'   => 'MX',
+    '200.189.169.141' => 'BR',
+);
 
-$ip = '200.77.236.16';
-$iana->whois_query( -ip => $ip, -whois => 'lacnic' );
-ok( defined $iana );
-is( $iana->country(), 'MX' ) or diag explain $iana;
+foreach my $ip ( sort keys %tests ) {
+    $iana->whois_query( -ip => $ip, -whois => 'lacnic' );
+    ok defined $iana, "IANA for IP $ip";
 
-# whois.registro.br do not provide anymore the country information for brazilian websites
-$ip = '200.189.169.141';
-$iana->whois_query( -ip => $ip, -whois => 'lacnic' );
-ok( defined $iana );
-todo 'whois.registro.br do not always provide the country' => sub {
-    ok $iana->country(), 'BR' or diag explain $iana;
-};
+    if ( defined $iana->country() ) {
+        is $iana->country(), $tests{$ip}, "Country is '$tests{$ip}' for IP $ip";
+    }
+    else {
+        diag "no country for IP $ip, expected '$tests{$ip}'\n", explain $iana;
+    }
+
+}
 
 done_testing;
-
