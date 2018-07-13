@@ -162,7 +162,7 @@ sub is_valid_ip ($) {
     my ($ip) = @_;
 
     return unless defined $ip;                  # shortcut earlier
-    return $ip =~ tr/:// ? is_valid_ipv6($ip) : is_valid_ipv4($ip);
+    return index( $ip, ':' ) >= 0 ? is_valid_ipv6($ip) : is_valid_ipv4($ip);
 }
 
 sub set_source ($$) {
