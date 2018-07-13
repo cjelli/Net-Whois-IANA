@@ -111,9 +111,10 @@ sub is_valid_ipv4 ($) {
 
     my $ip = shift;
 
-    return
-         $ip
-      && $ip =~ /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/
+    return $ip
+      && $ip =~ /^([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)$/
+
+      # not absolutely correct
       && ( ( $1 + 0 ) | ( $2 + 0 ) | ( $3 + 0 ) | ( $4 + 0 ) ) < 0x100;
 }
 
