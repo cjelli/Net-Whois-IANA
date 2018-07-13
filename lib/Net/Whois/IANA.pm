@@ -158,7 +158,9 @@ sub is_valid_ipv6 {
 # Is valid IP v4 or IP v6 address.
 sub is_valid_ip ($) {
     my ($ip) = @_;
-    return defined $ip && $ip =~ tr/:// ? is_valid_ipv6($ip) : is_valid_ipv4($ip);
+
+    return unless defined $ip;                  # shortcut earlier
+    return $ip =~ tr/:// ? is_valid_ipv6($ip) : is_valid_ipv4($ip);
 }
 
 sub set_source ($$) {
