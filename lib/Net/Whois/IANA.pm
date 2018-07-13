@@ -473,7 +473,7 @@ sub arin_process_query (%) {
 	$query{status}  = $query{nettype};
 	$query{inetnum} = $query{netrange};
 	$query{source}  = 'ARIN';
-	if ($query{cidr} =~ /\,/) {
+	if ( defined $query{cidr} && $query{cidr} =~ /\,/) {
 		$query{cidr} = [split(/\, /,$query{cidr})];
 	}
 	else {
