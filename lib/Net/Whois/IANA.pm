@@ -85,16 +85,21 @@ sub whois_connect ($;$$) {
     my $retries = 2;
     my $sleep   = 2;
 
+    my $sock;
+
     for ( 0 .. $retries ) {
-        if (
-            my $sock = IO::Socket::INET->new(
+        local $@;
+
+        # catch errors
+        eval {
+            $sock = IO::Socket::INET->new(
                 PeerAddr => $host,
                 PeerPort => $port,
                 Timeout  => $timeout,
-            )
-        ) {
-            return $sock;
-        }
+            );
+            1;
+        } and return $sock;
+
         Carp::carp "Cannot connect to $host at port $port";
         Carp::carp $@;
         sleep $sleep;
