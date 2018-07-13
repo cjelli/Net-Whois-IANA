@@ -87,7 +87,7 @@ sub whois_connect ($;$$) {
 
     my $sock;
 
-    for ( 0 .. $retries ) {
+    foreach my $iter ( 0 .. $retries ) {
         local $@;
 
         # catch errors
@@ -102,7 +102,7 @@ sub whois_connect ($;$$) {
 
         Carp::carp "Cannot connect to $host at port $port";
         Carp::carp $@;
-        sleep $sleep;
+        sleep $sleep unless $iter == $retries;    # avoid the last sleep
     }
     return 0;
 }
