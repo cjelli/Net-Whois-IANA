@@ -277,14 +277,16 @@ sub whois_query ($%) {
         my $sock = $self->source_connect($source_name)
           || Carp::carp "Connection failed to $source_name." && next;
         my %query = $self->{query_sub}( $sock, $params{-ip} );
-        next if ( !keys %query );
-        Carp::carp "Warning: permission denied at $source_name server $self->{whois_host}\n"
-          and next
-          if $query{permission} eq 'denied';
+
+        next unless keys %query;
+        do { Carp::carp "Warning: permission denied at $source_name server $self->{whois_host}\n"; next }
+          if $query{permission} && $query{permission} eq 'denied';
         $query{server} = uc $source_name;
         $self->{QUERY} = { post_process_query(%query) };
+
         return $self->{QUERY};
     }
+
     return {};
 }
 
