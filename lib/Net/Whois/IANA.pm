@@ -385,7 +385,9 @@ sub apnic_read_query ($$) {
             %query           = ();
             $query{fullinfo} = $tmp{fullinfo};
         }
-        $query{ lc($field) } .= ( $query{ lc($field) } ? ' ' : '' ) . $value;
+        my $lc_field = lc($field);
+        next if $lc_field eq 'country' && defined $query{ $lc_field };
+        $query{ $lc_field } .= ( $query{ $lc_field } ? ' ' : '' ) . $value;
     }
     close $sock;
     for ( keys %tmp ) {
