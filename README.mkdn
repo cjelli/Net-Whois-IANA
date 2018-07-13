@@ -4,7 +4,7 @@ Net::Whois::IANA - Net::Whois::IANA - A universal WHOIS data extractor.
 
 # VERSION
 
-version 0.43
+version 0.44
 
 # SYNOPSIS
 
@@ -170,22 +170,11 @@ Net::Whois::IANA - A universal WHOIS data extractor.
 
 # AUTHOR
 
-Roman M. Parparov, &lt;roman@parparov.com&lt;gt>
+Roman M. Parparov <roman@parparov.com>, Nicolas R <atoomic@cpan.org>
 
 # COPYRIGHT AND LICENSE
 
-Copyright 2003-2011 Bolet Consulting <bolet@parparov.com> and Roman M. Parparov
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
-# AUTHOR
-
-Nicolas R <atoomic@cpan.org>
-
-# COPYRIGHT AND LICENSE
-
-This software is copyright (c) 2003 by Bolet Consulting.
+This software is copyright (c) 2003-2013, 2018 by Bolet Consulting <bolet@parparov.com>.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

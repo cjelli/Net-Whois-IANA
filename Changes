@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+    - Adjust duplicate copyrights
+
 0.43      2018-07-13 14:26:35-06:00 America/Denver
     - Skip results that are missing inetnum and inet6num
     - fix duplicate country from apnic_read_query

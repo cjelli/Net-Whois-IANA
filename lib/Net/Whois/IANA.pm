@@ -770,15 +770,4 @@ server sometimes. This redirection is not reflected yet by the package.
   Net::Whois::IP, Net::Whois::RIPE, IP::Country,
   Geography::Countries, Net::CIDR, NetAddr::IP,
 
-=head1 AUTHOR
-
-Roman M. Parparov, E<lt>roman@parparov.com<gt>
-
-=head1 COPYRIGHT AND LICENSE
-
-Copyright 2003-2011 Bolet Consulting <bolet@parparov.com> and Roman M. Parparov
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
-
 =cut
