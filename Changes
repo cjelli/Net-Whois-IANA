@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+0.44      2018-07-13 17:32:55-06:00 America/Denver
+
     - Adjust duplicate copyrights
     - Adjust flapping test for BR country
     - Try to improve testsuite stability using travis
