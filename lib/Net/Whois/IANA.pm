@@ -120,6 +120,7 @@ sub is_valid_ipv4 ($) {
 
 sub is_valid_ipv6 {
     my ($ip) = @_;
+
     return
       if $ip =~ /^:[^:]/
       || $ip =~ /[^:]:$/;    # Can't have single : on front or back
@@ -298,8 +299,7 @@ sub default_query ($$) {
 
 sub ripe_read_query ($$) {
 
-    my $sock = shift;
-    my $ip   = shift;
+    my ( $sock, $ip ) = @_;
 
     my %query = ( fullinfo => '' );
     print $sock "-r $ip\n";
@@ -319,6 +319,7 @@ sub ripe_read_query ($$) {
 sub ripe_process_query (%) {
 
     my %query = @_;
+
     if (
         ( defined $query{remarks} && $query{remarks} =~ /The country is really world wide/ )
         || ( defined $query{netname}
@@ -341,9 +342,7 @@ sub ripe_process_query (%) {
 }
 
 sub ripe_query ($$) {
-
-    my $sock = shift;
-    my $ip   = shift;
+    my ( $sock, $ip ) = @_;
 
     my %query = ripe_read_query( $sock, $ip );
     return () unless defined $query{country};
@@ -351,9 +350,7 @@ sub ripe_query ($$) {
 }
 
 sub apnic_read_query ($$) {
-
-    my $sock = shift;
-    my $ip   = shift;
+    my ( $sock, $ip ) = @_;
 
     my %query = ( fullinfo => '' );
     my %tmp;
@@ -397,8 +394,8 @@ sub apnic_read_query ($$) {
 }
 
 sub apnic_process_query (%) {
-
     my %query = @_;
+
     if (
         ( defined $query{remarks} && $query{remarks} =~ /address range is not administered by APNIC|This network in not allocated/ )
         || ( defined $query{descr}
@@ -413,22 +410,19 @@ sub apnic_process_query (%) {
         $query{permission} = 'allowed';
         $query{cidr} = [ Net::CIDR::range2cidr( uc( $query{inet6num} || $query{inetnum} ) ) ];
     }
+
     return %query;
 }
 
 sub apnic_query ($$) {
-
-    my $sock = shift;
-    my $ip   = shift;
+    my ( $sock, $ip ) = @_;
 
     my %query = apnic_read_query( $sock, $ip );
     return apnic_process_query(%query);
 }
 
 sub arin_read_query ($$) {
-
-    my $sock = shift;
-    my $ip   = shift;
+    my ( $sock, $ip ) = @_;
 
     my %query = ( fullinfo => '' );
     my %tmp = ();
@@ -451,15 +445,19 @@ sub arin_read_query ($$) {
         $query{ lc($field) } .= ( $query{ lc($field) } ? ' ' : '' ) . $value;
     }
     close $sock;
+
     $query{orgname} = $query{custname} if defined $query{custname};
+
     for ( keys %tmp ) {
         $query{$_} = $tmp{$_} unless defined $query{$_};
     }
+
     return %query;
 }
 
 sub arin_process_query (%) {
     my %query = @_;
+
     return ()
       if $query{orgid} && $query{orgid} =~ /^\s*RIPE|LACNIC|APNIC|AFRINIC\s*$/;
 
@@ -475,21 +473,21 @@ sub arin_process_query (%) {
     else {
         $query{cidr} = [ $query{cidr} ];
     }
+
     return %query;
 }
 
 sub arin_query ($$) {
+    my ( $sock, $ip ) = @_;
 
-    my $sock  = shift;
-    my $ip    = shift;
     my %query = arin_read_query( $sock, $ip );
+
     return arin_process_query(%query);
 }
 
 sub lacnic_read_query ($$) {
+    my ( $sock, $ip ) = @_;
 
-    my $sock  = shift;
-    my $ip    = shift;
     my %query = ( fullinfo => '' );
 
     print $sock "$ip\n";
@@ -515,7 +513,6 @@ sub lacnic_read_query ($$) {
 }
 
 sub lacnic_process_query (%) {
-
     my %query = @_;
 
     $query{permission} = 'allowed';
@@ -541,17 +538,16 @@ sub lacnic_process_query (%) {
 }
 
 sub lacnic_query ($$) {
+    my ( $sock, $ip ) = @_;
 
-    my $sock  = shift;
-    my $ip    = shift;
     my %query = lacnic_read_query( $sock, $ip );
+
     return lacnic_process_query(%query);
 }
 
 *afrinic_read_query = *apnic_read_query;
 
 sub afrinic_process_query (%) {
-
     my %query = @_;
 
     return ()

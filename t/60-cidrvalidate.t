@@ -14,7 +14,7 @@ my $iana = Net::Whois::IANA->new;
 $iana->whois_query( -ip => '191.96.58.222', -debug => 0 );
 
 my $cidr = $iana->cidr;
-is ref $cidr, 'ARRAY', "cidr is an array ref";
+is ref $cidr, 'ARRAY', "cidr is an array ref" or diag "CIDR: ", explain $cidr;
 
 note explain $iana->cidr;
 is $cidr->[0], '191.96.58/24', 'cidr';
