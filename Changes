@@ -1,5 +1,15 @@
 {{$NEXT}}
-- Skip results that are missing inetnum and inet6num
+    - Skip results that are missing inetnum and inet6num
+    - fix duplicate country from apnic_read_query
+    - fix unit tests 'whois.registro.br' stop providing country
+    - accessors are defined at compile time and AUTOLOAD is not used
+anymore
+    - Skip data for 0.0.0.0 that is returned from APNIC
+    - Net::Whois::IANA should not import dependency symbols
+    - Refactor whois_connect and source_connect to avoid memory crash loop
+    - Add IPv6 Support to Net::Whois::IANA
+    - Ripe queries should include all whois data
+    - Fix spaces in descr field
 
 0.41  Fri Mar 29 12:11:19 PDT 2013
 	- Fixed bug causing infinite loops when connecting to servers
