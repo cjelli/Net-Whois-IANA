@@ -258,13 +258,14 @@ sub post_process_query (%) {
         }
     }
     if ( !ref $query{cidr} ) {
-        if ( $query{cidr} =~ /\,/ ) {
-            $query{cidr} = [ split( /\, /, $query{cidr} ) ];
+        if ( defined $query{cidr} && $query{cidr} =~ /\,/ ) {
+            $query{cidr} = [ split( /\s*\,\s*/, $query{cidr} ) ];
         }
         else {
             $query{cidr} = [ $query{cidr} ];
         }
     }
+
     return %query;
 }
 
@@ -468,7 +469,7 @@ sub arin_process_query (%) {
     $query{inetnum}    = $query{netrange};
     $query{source}     = 'ARIN';
     if ( defined $query{cidr} && $query{cidr} =~ /\,/ ) {
-        $query{cidr} = [ split( /\, /, $query{cidr} ) ];
+        $query{cidr} = [ split( /\s*\,\s*/, $query{cidr} ) ];
     }
     else {
         $query{cidr} = [ $query{cidr} ];
