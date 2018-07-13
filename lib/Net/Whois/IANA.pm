@@ -17,23 +17,30 @@ our $WHOIS_PORT    = 43;
 our $WHOIS_TIMEOUT = 30;
 our @DEFAULT_SOURCE_ORDER = qw(arin ripe apnic lacnic afrinic);
 
-our %IANA = (
-	apnic   => [
-		[ 'whois.apnic.net',   $WHOIS_PORT, $WHOIS_TIMEOUT, \&apnic_query   ],
-	],
-	ripe    => [
-		[ 'whois.ripe.net',    $WHOIS_PORT, $WHOIS_TIMEOUT, \&ripe_query    ],
-	],
-	arin    => [
-		[ 'whois.arin.net',    $WHOIS_PORT, $WHOIS_TIMEOUT, \&arin_query    ],
-	],
-	lacnic  => [
-		[ 'whois.lacnic.net',  $WHOIS_PORT, $WHOIS_TIMEOUT, \&lacnic_query  ],
-	],
-	afrinic => [
-		[ 'whois.afrinic.net', $WHOIS_PORT, $WHOIS_TIMEOUT, \&afrinic_query ],
-	],
-);
+our %IANA;
+
+BEGIN {
+	# populate the hash at compile time
+
+	%IANA = (
+		apnic   => [
+			[ 'whois.apnic.net',   $WHOIS_PORT, $WHOIS_TIMEOUT, \&apnic_query   ],
+		],
+		ripe    => [
+			[ 'whois.ripe.net',    $WHOIS_PORT, $WHOIS_TIMEOUT, \&ripe_query    ],
+		],
+		arin    => [
+			[ 'whois.arin.net',    $WHOIS_PORT, $WHOIS_TIMEOUT, \&arin_query    ],
+		],
+		lacnic  => [
+			[ 'whois.lacnic.net',  $WHOIS_PORT, $WHOIS_TIMEOUT, \&lacnic_query  ],
+		],
+		afrinic => [
+			[ 'whois.afrinic.net', $WHOIS_PORT, $WHOIS_TIMEOUT, \&afrinic_query ],
+		],
+	);
+
+}
 
 use base 'Exporter';
 
@@ -43,6 +50,22 @@ our @EXPORT = qw(
 	@IANA
 	%IANA
 );
+
+BEGIN {
+	# do not use AUTOLOAD - only accept lowercase function name
+	# define accessors at compile time
+	my @accessors = qw{country netname desc status source server inetnum inet6num cidr};
+
+	foreach my $accessor ( @accessors ) {
+		no strict 'refs';
+		*$accessor = sub {
+			my ( $self ) = @_;
+			die qq[$accessor is a method call] unless ref $self;
+			return unless $self->{QUERY};
+			return $self->{QUERY}->{$accessor};
+		};
+	}
+}
 
 sub new ($) {
 

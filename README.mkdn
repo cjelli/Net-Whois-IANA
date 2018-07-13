@@ -10,7 +10,7 @@ version 0.042
 
     use Net::Whois::IANA;
     my $ip = '132.66.16.2';
-    my $iana = new Net::Whois::IANA;
+    my $iana = Net::Whois::IANA->new;
     $iana->whois_query(-ip=>$ip);
     print "Country: " , $iana->country()            , "\n";
     print "Netname: " , $iana->netname()            , "\n";
