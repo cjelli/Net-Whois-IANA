@@ -588,7 +588,8 @@ sub is_mine ($$;@) {
         s|(/.*)|$pad$1|;
         $_;
       }
-      map { split(/\s+/) } @cidr;
+      map  { split(/\s+/) }
+      grep { defined $_ } @cidr;
 
     return Net::CIDR::cidrlookup( $ip, @cidr );
 }
